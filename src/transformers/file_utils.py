@@ -4,7 +4,6 @@ This file is adapted from the AllenNLP library at https://github.com/allenai/all
 Copyright by the AllenNLP authors.
 """
 
-
 import fnmatch
 import json
 import logging
@@ -30,28 +29,31 @@ from . import __version__
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
 try:
-    os.environ.setdefault("USE_TORCH", "YES")
-    if os.environ["USE_TORCH"].upper() in ("1", "ON", "YES"):
+    USE_TF = os.environ.get("USE_TF", "AUTO").upper()
+    USE_TORCH = os.environ.get("USE_TORCH", "AUTO").upper()
+    if USE_TORCH in ("1", "ON", "YES", "AUTO") and USE_TF not in ("1", "ON", "YES"):
         import torch
 
         _torch_available = True  # pylint: disable=invalid-name
         logger.info("PyTorch version {} available.".format(torch.__version__))
     else:
-        logger.info("USE_TORCH override through env variable, disabling PyTorch")
+        logger.info("Disabling PyTorch because USE_TF is set")
         _torch_available = False
 except ImportError:
     _torch_available = False  # pylint: disable=invalid-name
 
 try:
-    os.environ.setdefault("USE_TF", "YES")
-    if os.environ["USE_TF"].upper() in ("1", "ON", "YES"):
+    USE_TF = os.environ.get("USE_TF", "AUTO").upper()
+    USE_TORCH = os.environ.get("USE_TORCH", "AUTO").upper()
+
+    if USE_TF in ("1", "ON", "YES", "AUTO") and USE_TORCH not in ("1", "ON", "YES"):
         import tensorflow as tf
 
         assert hasattr(tf, "__version__") and int(tf.__version__[0]) >= 2
         _tf_available = True  # pylint: disable=invalid-name
         logger.info("TensorFlow version {} available.".format(tf.__version__))
     else:
-        logger.info("USE_TF override through env variable, disabling Tensorflow")
+        logger.info("Disabling Tensorflow because USE_TORCH is set")
         _tf_available = False
 except (ImportError, AssertionError):
     _tf_available = False  # pylint: disable=invalid-name
@@ -65,7 +67,6 @@ except ImportError:
         os.getenv("TORCH_HOME", os.path.join(os.getenv("XDG_CACHE_HOME", "~/.cache"), "torch"))
     )
 default_cache_path = os.path.join(torch_cache_home, "transformers")
-
 
 try:
     from pathlib import Path
